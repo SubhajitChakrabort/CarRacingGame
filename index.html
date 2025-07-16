@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Race by Aanchal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-teal': '#008080',
+                        'game-tomato': '#ff6347',
+                        'game-green': '#22c55e',
+                        'game-red': '#ef4444'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 4s ease-out',
+                        'slide-in-left': 'slideInLeft 4s ease-out',
+                        'bounce-in': 'bounceIn 0.5s ease-out',
+                        'pulse-fast': 'pulse 0.5s ease-in-out infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .game-bg {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("https://play-lh.googleusercontent.com/bLuGzhIS8yECZTAKsrOqfRcYxapgXBfnvHXO3rGT6w1CLxlRXTwE684s4f9NFMPM9X0") no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .UserCar {
+            width: 50px;
+            height: 100px;
+            position: absolute;
+            bottom: 120px;
+            background-image: url(car1.png);
+            background-size: cover;
+            border: 3px solid #22c55e;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
+        }
+
+        .lines {
+            width: 10px;
+            height: 100px;
+            background: white;
+            position: absolute;
+            margin-left: 195px;
+        }
+
+        .other {
+            width: 50px;
+            height: 100px;
+            position: absolute;
+            bottom: 120px;
+            background-size: cover;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+
+        .backgroundLeft, .backgroundRight {
+            background: white url("backgroundImage.gif") no-repeat scroll center;
+            background-size: cover;
+        }
+
+        .countdown {
+            font-size: 6rem;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 768px) {
+            .countdown {
+                font-size: 4rem;
+            }
+        }
+
+        .speed-indicator {
+            transition: all 0.3s ease;
+        }
+
+        .collision-highlight {
+            animation: pulse 0.5s ease-in-out 3;
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8) !important;
+        }
+
+        /* Mobile navbar styles */
+        .mobile-menu {
+            transform: translateY(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .mobile-menu.active {
+            transform: translateY(0);
+        }
+
+        /* High Score Display */
+        .high-score-display {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 40;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: 2px solid #ff6347;
+        }
+
+        @media (max-width: 768px) {
+            .high-score-display {
+                top: 70px;
+                right: 10px;
+                font-size: 0.875rem;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-100">
+    <!-- High Score Display -->
+    <div id="highScoreDisplay" class="high-score-display">
+        High Score: <span id="topHighScore">0</span>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="backgroundMusic" src="backgroundMusic.wav" loop></audio>
+    <audio id="collisionSound" src="collision_sound.mp3"></audio>
+    <audio id="scoreSound" src="score_sound.mp3"></audio>
+    <audio id="accelerationSound" src="acceleration_sound.mp3"></audio>
+    <audio id="brakeSound" src="brake_sound.mp3"></audio>
+    <audio id="countdownSound" src="countdown_sound.mp3"></audio>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-game-teal text-white z-50 shadow-lg">
+        <div class="container mx-auto px-4">
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex justify-between items-center py-4">
+                <h1 class="text-2xl font-bold">Aanchal Road Race</h1>
+                <div class="space-x-4">
+                    <button onclick="showHome()" class="bg-white text-game-teal px-4 py-2 rounded hover:bg-gray-100 transition-colors">Home</button>
+                    <button onclick="showRules()" class="bg-white text-game-teal px-4 py-2 rounded hover:bg-gray-100 transition-colors">Rules</button>
+                    <button onclick="showGame()" class="bg-white text-game-teal px-4 py-2 rounded hover:bg-gray-100 transition-colors">Game</button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div class="md:hidden">
+                <div class="flex justify-between items-center py-3">
+                    <h1 class="text-lg font-bold">Aanchal Road Race</h1>
+                    <button onclick="toggleMobileMenu()" class="text-white focus:outline-none">
+                        <svg id="hamburger" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg id="close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Mobile Menu -->
+                <div id="mobileMenu" class="mobile-menu absolute top-full left-0 right-0 bg-game-teal border-t border-teal-600">
+                    <div class="flex flex-col">
+                        <div class="flex">
+                            <button onclick="showHome(); toggleMobileMenu();" class="flex-1 bg-white text-game-teal py-3 px-4 hover:bg-gray-100 transition-colors border-r border-gray-300">Home</button>
+                            <button onclick="showRules(); toggleMobileMenu();" class="flex-1 bg-white text-game-teal py-3 px-4 hover:bg-gray-100 transition-colors">Rules</button>
+                        </div>
+                        <button onclick="showGame(); toggleMobileMenu();" class="bg-white text-game-teal py-3 px-4 hover:bg-gray-100 transition-colors border-t border-gray-300">Game</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home Screen -->
+    <div id="homeScreen" class="min-h-screen game-bg flex flex-col justify-center items-center text-center px-4 pt-20">
+        <h1 class="text-white text-3xl md:text-5xl lg:text-6xl font-bold mb-8 animate-fade-in shadow-2xl p-4 md:p-6 rounded-lg" style="box-shadow: 0 0 40px #ff6347;">
+            Welcome to the Aanchal Road Race
+        </h1>
+        <p class="text-white text-lg md:text-xl mb-8 animate-slide-in-left bg-black bg-opacity-50 p-4 rounded-lg">
+            Choose an option below:
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 md:gap-6">
+            <button onclick="showGame()" class="bg-transparent border-2 border-game-teal text-white px-6 py-3 md:px-8 md:py-4 rounded-lg text-lg md:text-xl font-semibold hover:bg-game-teal hover:text-white transition-all duration-300 transform hover:scale-105" style="box-shadow: 0 0 20px #ff6347;">
+                Start Game
+            </button>
+            <button onclick="showRules()" class="bg-transparent border-2 border-game-teal text-white px-6 py-3 md:px-8 md:py-4 rounded-lg text-lg md:text-xl font-semibold hover:bg-game-teal hover:text-white transition-all duration-300 transform hover:scale-105" style="box-shadow: 0 0 20px #ff6347;">
+                Game Rules
+            </button>
+        </div>
+    </div>
+
+    <!-- Rules Screen -->
+    <div id="rulesScreen" class="hidden min-h-screen bg-gray-100 pt-20 px-4">
+        <div class="container mx-auto max-w-6xl">
+            <div class="flex flex-col lg:flex-row gap-6 md:gap-8">
+                <!-- Game Image -->
+                <div class="lg:w-1/2">
+                    <img src="backgroundImageRule.png" alt="Bike Racing Game Image" class="w-full rounded-lg shadow-lg">
+                </div>
+                
+                <!-- Rules Content -->
+                <div class="lg:w-1/2 bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <h1 class="text-game-teal text-2xl md:text-3xl font-bold mb-4">Road Race</h1>
+                    <h2 class="text-xl md:text-2xl font-semibold mb-4">Game Rules:</h2>
+                    
+                    <ol class="space-y-4 text-sm md:text-base leading-relaxed">
+                        <li><strong>Objective:</strong> Maneuver your green car (car1.png) through traffic and earn the highest score without colliding with other cars.</li>
+                        <li><strong>Starting:</strong> Click "Start Game" and wait for the 3-2-1-GO countdown.</li>
+                        <li><strong>Controls:</strong> 
+                            <ul class="ml-4 mt-2 space-y-1">
+                                <li>• Arrow Keys: Move your car</li>
+                                <li>• Up Arrow: Accelerate (0-200 kmph)</li>
+                                <li>• Down Arrow: Brake (reduce speed)</li>
+                                <li>• Mobile: Use on-screen controls or swipe gestures</li>
+                            </ul>
+                        </li>
+                        <li><strong>Scoring:</strong> Earn points continuously. Score increases with level progression.</li>
+                        <li><strong>Collision:</strong> Game ends when your green car hits any red enemy car. The colliding car will be highlighted.</li>
+                        <li><strong>Levels:</strong> Speed increases every 500 points. Higher levels = faster gameplay.</li>
+                        <li><strong>Data Storage:</strong> All scores and progress are saved locally and persist after page reload.</li>
+                    </ol>
+
+                    <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                        <button onclick="showHome()" class="bg-game-teal text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                            Back to Home
+                        </button>
+                        <button onclick="showGame()" class="bg-game-tomato text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                            Start the Game!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="hidden">
+        <div class="BikeGame bg-black min-h-screen pt-16 md:pt-20">
+            <!-- Game UI -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
+                <!-- Score and Level -->
+                <div class="flex gap-2 md:gap-4">
+                    <div class="bg-game-teal text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm md:text-lg font-bold shadow-lg">
+                        Score: <span id="currentScore">0</span>
+                    </div>
+                    <div class="bg-game-teal text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm md:text-lg font-bold shadow-lg">
+                        Level: <span id="currentLevel">1</span>
+                    </div>
+                </div>
+
+                <!-- Speed and Controls Indicator -->
+                <div class="flex gap-2 md:gap-4 items-center">
+                    <div class="speed-indicator bg-gray-800 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg text-sm md:text-lg font-bold shadow-lg">
+                        <span id="currentSpeed">0</span> kmph
+                    </div>
+                    <div class="flex gap-2">
+                        <div id="acceleratorIcon" class="w-6 h-6 md:w-8 md:h-8 bg-game-green rounded-full flex items-center justify-center opacity-50 transition-opacity">
+                            <span class="text-white text-xs">⬆</span>
+                        </div>
+                        <div id="brakeIcon" class="w-6 h-6 md:w-8 md:h-8 bg-game-red rounded-full flex items-center justify-center opacity-50 transition-opacity">
+                            <span class="text-white text-xs">⬇</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Countdown Screen -->
+            <div id="countdownScreen" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-30">
+                <div class="text-center">
+                    <div id="countdownNumber" class="countdown text-white mb-4">3</div>
+                    <div class="text-white text-xl md:text-2xl">Get Ready!</div>
+                </div>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="gameOverScreen" class="hidden fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-30 p-4">
+                <div class="bg-white rounded-lg p-6 md:p-8 text-center max-w-md w-full mx-4">
+                    <h2 class="text-2xl md:text-3xl font-bold text-game-red mb-4">Game Over!</h2>
+                    <div id="collisionInfo" class="mb-4">
+                        <p class="text-base md:text-lg mb-2">Your car collided with:</p>
+                        <div class="flex justify-center items-center gap-4 mb-4">
+                            <div id="collidedCarImage" class="w-12 h-24 md:w-16 md:h-32 bg-cover bg-center border-2 border-red-500 rounded"></div>
+                            <span class="text-xl">💥</span>
+                            <div class="w-12 h-24 md:w-16 md:h-32 bg-cover bg-center border-2 border-green-500 rounded" style="background-image: url('car1.png')"></div>
+                        </div>
+                    </div>
+                    <div class="mb-6 space-y-2">
+                        <p class="text-base md:text-lg">Final Score: <span id="finalScore" class="font-bold text-game-teal">0</span></p>
+                        <p class="text-base md:text-lg">Level Reached: <span id="finalLevel" class="font-bold text-game-teal">1</span></p>
+                        <p class="text-base md:text-lg">High Score: <span id="gameOverHighScore" class="font-bold text-game-tomato">0</span></p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="restartGame()" class="bg-game-green text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                            Restart Game
+                        </button>
+                        <button onclick="showHome()" class="bg-game-teal text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors">
+                            Home
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Area Container -->
+            <div class="flex justify-center items-center p-4">
+                <div class="relative">
+                    <!-- Background Elements -->
+                    <div class="backgroundLeft absolute -left-16 md:-left-32 lg:-left-64 top-0 w-16 md:w-32 lg:w-64 h-80 md:h-96 lg:h-[570px]"></div>
+                    <div class="backgroundRight absolute -right-16 md:-right-32 lg:-right-64 top-0 w-16 md:w-32 lg:w-64 h-80 md:h-96 lg:h-[570px]"></div>
+                    
+                    <!-- Start Screen -->
+                    <div id="startScreen" class="StartScreen absolute inset-0 bg-green-800 bg-opacity-95 text-white z-10 flex flex-col justify-center items-center text-center p-4 md:p-6 rounded-lg shadow-2xl">
+                        <div class="mb-4 md:mb-6">
+                            <h3 class="text-xl md:text-2xl lg:text-3xl font-bold mb-4">Ready to Race?</h3>
+                            <div class="flex justify-center items-center gap-2 md:gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="w-12 h-24 md:w-16 md:h-32 bg-cover bg-center border-2 border-green-500 rounded mx-auto mb-2" style="background-image: url('car1.png')"></div>
+                                    <p class="text-xs md:text-sm">Your Car</p>
+                                </div>
+                                <span class="text-lg md:text-2xl">VS</span>
+                                <div class="text-center">
+                                    <div class="flex gap-1">
+                                        <div class="w-6 h-12 md:w-8 md:h-16 bg-cover bg-center border border-red-500 rounded" style="background-image: url('car2.png')"></div>
+                                        <div class="w-6 h-12 md:w-8 md:h-16 bg-cover bg-center border border-red-500 rounded" style="background-image: url('car3.png')"></div>
+                                        <div class="w-6 h-12 md:w-8 md:h-16 bg-cover bg-center border border-red-500 rounded" style="background-image: url('car4.png')"></div>
+                                        <div class="w-6 h-12 md:w-8 md:h-16 bg-cover bg-center border border-red-500 rounded" style="background-image: url('car5.png')"></div>
+                                    </div>
+                                    <p class="text-xs md:text-sm mt-2">Enemy Cars</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-base md:text-lg lg:text-xl mb-4 md:mb-6 leading-relaxed">
+                            Click to Start Game<br>
+                            <span class="text-xs md:text-sm">Use Arrow Keys or Touch Controls</span>
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-3 md:gap-4 w-full max-w-sm">
+                            <button onclick="startGameCountdown()" class="bg-game-green text-white px-6 py-3 md:px-8 md:py-4 rounded-lg text-lg md:text-xl font-bold hover:bg-opacity-90 transition-colors transform hover:scale-105 w-full sm:w-auto">
+                                Start Game
+                            </button>
+                            <button onclick="resetHighScore()" class="bg-game-red text-white px-4 py-3 md:px-6 md:py-3 rounded-lg text-sm md:text-base hover:bg-opacity-90 transition-colors w-full sm:w-auto">
+                                Reset High Score
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Area -->
+                    <div class="GameArea w-72 md:w-80 lg:w-96 h-80 md:h-96 lg:h-[600px] bg-gray-800 relative overflow-hidden border-l-4 border-r-4 md:border-l-8 md:border-r-8 border-dashed border-white rounded-lg"></div>
+                </div>
+            </div>
+
+            <!-- Mobile Controls -->
+            <div id="mobileControls" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 md:hidden z-20">
+                <div class="bg-black bg-opacity-70 rounded-lg p-3">
+                    <div class="grid grid-cols-3 gap-2 w-40">
+                        <div></div>
+                        <button id="upBtn" class="bg-game-green text-white p-2 rounded-lg text-lg font-bold active:bg-opacity-80 transition-all">
+                            <span>⬆</span>
+                        </button>
+                        <div></div>
+                        <button id="leftBtn" class="bg-game-teal text-white p-2 rounded-lg text-lg font-bold active:bg-opacity-80 transition-all">
+                            <span>←</span>
+                        </button>
+                        <button id="downBtn" class="bg-game-red text-white p-2 rounded-lg text-lg font-bold active:bg-opacity-80 transition-all">
+                            <span>⬇</span>
+                        </button>
+                        <button id="rightBtn" class="bg-game-teal text-white p-2 rounded-lg text-lg font-bold active:bg-opacity-80 transition-all">
+                            <span>→</span>
+                        </button>
+                    </div>
+                    <div class="text-center mt-2 text-white text-xs">Touch Controls</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const collisionSound = document.getElementById('collisionSound');
+        const scoreSound = document.getElementById('scoreSound');
+        const accelerationSound = document.getElementById('accelerationSound');
+        const brakeSound = document.getElementById('brakeSound');
+        const countdownSound = document.getElementById('countdownSound');
+
+        const score = document.getElementById('currentScore');
+        const level = document.getElementById('currentLevel');
+        const speedDisplay = document.getElementById('currentSpeed');
+        const acceleratorIcon = document.getElementById('acceleratorIcon');
+        const brakeIcon = document.getElementById('brakeIcon');
+        const topHighScore = document.getElementById('topHighScore');
+
+        let startscreen, gamearea;
+        let player = { speed: 5, score: 0, baseSpeed: 5, kmph: 50 };
+        let gameData = {
+            highScore: parseInt(localStorage.getItem('roadRaceHighScore')) || 0,
+            totalGames: parseInt(localStorage.getItem('roadRaceTotalGames')) || 0,
+            totalScore: parseInt(localStorage.getItem('roadRaceTotalScore')) || 0,
+            lastLevel: parseInt(localStorage.getItem('roadRaceLastLevel')) || 1
+        };
+        let currentLevel = 1;
+        let gameover = false;
+        let gameStarted = false;
+        let collidedCar = null;
+
+        const carImages = ['car2.png', 'car3.png', 'car4.png', 'car5.png'];
+        let keys = { ArrowUp: false, ArrowDown: false, ArrowRight: false, ArrowLeft: false };
+
+        // Initialize game data display
+        function updateGameDataDisplay() {
+            topHighScore.textContent = gameData.highScore;
+            document.getElementById('gameOverHighScore').textContent = gameData.highScore;
+        }
+
+        // Save game data to localStorage
+        function saveGameData() {
+            localStorage.setItem('roadRaceHighScore', gameData.highScore.toString());
+            localStorage.setItem('roadRaceTotalGames', gameData.totalGames.toString());
+            localStorage.setItem('roadRaceTotalScore', gameData.totalScore.toString());
+            localStorage.setItem('roadRaceLastLevel', gameData.lastLevel.toString());
+        }
+
+        // Convert game speed to kmph (0-200 range)
+        function convertToKmph(gameSpeed) {
+            // Map game speed (1-15) to kmph (0-200)
+            return Math.round((gameSpeed / 15) * 200);
+        }
+
+        // Screen Management
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburger = document.getElementById('hamburger');
+            const close = document.getElementById('close');
+            
+            mobileMenu.classList.toggle('active');
+            hamburger.classList.toggle('hidden');
+            close.classList.toggle('hidden');
+        }
+
+        function showHome() {
+            document.getElementById('homeScreen').classList.remove('hidden');
+            document.getElementById('rulesScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            stopAllAudio();
+        }
+
+        function showRules() {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('rulesScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            stopAllAudio();
+        }
+
+        function showGame() {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('rulesScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            setTimeout(initializeGame, 100);
+        }
+
+        // Game Initialization
+        function initializeGame() {
+            startscreen = document.getElementById('startScreen');
+            gamearea = document.querySelector('.GameArea');
+            
+            // Reset game state
+            player = { speed: 5, score: 0, baseSpeed: 5, kmph: 50 };
+            currentLevel = 1;
+            gameover = false;
+            gameStarted = false;
+            
+            // Update displays
+            score.textContent = '0';
+            level.textContent = '1';
+            speedDisplay.textContent = '50';
+            updateGameDataDisplay();
+            
+            // Show start screen
+            startscreen.classList.remove('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('countdownScreen').classList.add('hidden');
+        }
+
+        // Countdown Function
+        function startGameCountdown() {
+            const countdownScreen = document.getElementById('countdownScreen');
+            const countdownNumber = document.getElementById('countdownNumber');
+            
+            startscreen.classList.add('hidden');
+            countdownScreen.classList.remove('hidden');
+            
+            let count = 3;
+            countdownNumber.textContent = count;
+            countdownNumber.style.color = '#ffffff';
+            countdownSound.play();
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownNumber.textContent = count;
+                    countdownSound.play();
+                } else if (count === 0) {
+                    countdownNumber.textContent = 'GO!';
+                    countdownNumber.style.color = '#22c55e';
+                    countdownSound.play();
+                } else {
+                    clearInterval(countdownInterval);
+                    countdownScreen.classList.add('hidden');
+                    startGame();
+                }
+            }, 1000);
+        }
+
+        // Start Game Function
+        function startGame() {
+            gamearea.innerHTML = "";
+            gameStarted = true;
+            player.start = true;
+            player.score = 0;
+            currentLevel = 1;
+            player.speed = 5;
+            player.baseSpeed = 5;
+            player.kmph = 50;
+            gameover = false;
+            
+            // Update displays
+            level.textContent = currentLevel;
+            speedDisplay.textContent = player.kmph;
+            
+            // Start background music
+            backgroundMusic.play();
+            
+            // Create road lines
+            for (let x = 0; x < 5; x++) {
+                let roadline = document.createElement('div');
+                roadline.setAttribute('class', 'lines');
+                roadline.y = (x * 150);
+                roadline.style.top = roadline.y + 'px';
+                gamearea.appendChild(roadline);
+            }
+
+            // Create user car
+            let userCar = document.createElement('div');
+            userCar.setAttribute('class', 'UserCar');
+            gamearea.appendChild(userCar);
+
+            player.x = userCar.offsetLeft;
+            player.y = userCar.offsetTop;
+
+            // Create enemy cars
+            for (let x = 0; x < 3; x++) {
+                let enemyCar = document.createElement('div');
+                enemyCar.setAttribute('class', 'other');
+                enemyCar.carType = carImages[Math.floor(Math.random() * carImages.length)];
+                enemyCar.style.backgroundImage = `url(${enemyCar.carType})`;
+                enemyCar.y = ((x + 1) * 350) * -1;
+                enemyCar.style.top = enemyCar.y + 'px';
+                enemyCar.style.left = Math.floor(Math.random() * 280) + 'px';
+                gamearea.appendChild(enemyCar);
+            }
+
+            window.requestAnimationFrame(gamePlay);
+        }
+
+        // Restart Game Function
+        function restartGame() {
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            startGameCountdown();
+        }
+
+        // Reset High Score Function
+        function resetHighScore() {
+            gameData.highScore = 0;
+            gameData.totalGames = 0;
+            gameData.totalScore = 0;
+            gameData.lastLevel = 1;
+            saveGameData();
+            updateGameDataDisplay();
+            
+            // Show confirmation
+            alert('High Score and all data have been reset!');
+        }
+
+        // Key Event Handlers
+        document.addEventListener('keydown', keyDown);
+        document.addEventListener('keyup', keyUp);
+
+        function keyDown(ev) {
+            if (!gameStarted) return;
+            ev.preventDefault();
+            keys[ev.key] = true;
+            
+            if (ev.key === 'ArrowUp') {
+                player.speed = Math.min(player.baseSpeed + 5, 15);
+                player.kmph = convertToKmph(player.speed);
+                speedDisplay.textContent = player.kmph;
+                acceleratorIcon.style.opacity = '1';
+                acceleratorIcon.classList.add('animate-pulse-fast');
+                playAccelerationSound();
+            } else if (ev.key === 'ArrowDown') {
+                player.speed = Math.max(player.baseSpeed - 3, 1);
+                player.kmph = convertToKmph(player.speed);
+                speedDisplay.textContent = player.kmph;
+                brakeIcon.style.opacity = '1';
+                brakeIcon.classList.add('animate-pulse-fast');
+                playBrakeSound();
+            }
+        }
+
+        function keyUp(ev) {
+            if (!gameStarted) return;
+            ev.preventDefault();
+            keys[ev.key] = false;
+            
+            if (ev.key === 'ArrowUp') {
+                player.speed = player.baseSpeed;
+                player.kmph = convertToKmph(player.speed);
+                speedDisplay.textContent = player.kmph;
+                acceleratorIcon.style.opacity = '0.5';
+                acceleratorIcon.classList.remove('animate-pulse-fast');
+                accelerationSound.pause();
+            } else if (ev.key === 'ArrowDown') {
+                player.speed = player.baseSpeed;
+                player.kmph = convertToKmph(player.speed);
+                speedDisplay.textContent = player.kmph;
+                brakeIcon.style.opacity = '0.5';
+                brakeIcon.classList.remove('animate-pulse-fast');
+                brakeSound.pause();
+            }
+        }
+
+        // Collision Detection
+        function isCollide(a, b) {
+            const aRect = a.getBoundingClientRect();
+            const bRect = b.getBoundingClientRect();
+            return !((aRect.bottom < bRect.top) || (aRect.top > bRect.bottom) || 
+                    (aRect.right < bRect.left) || (aRect.left > bRect.right));
+        }
+
+        // Move Road Lines
+        function moveLines() {
+            let lines = document.querySelectorAll('.lines');
+            lines.forEach(function (item) {
+                if (item.y >= 700) {
+                    item.y -= 750;
+                }
+                item.y += player.speed;
+                item.style.top = item.y + 'px';
+            });
+        }
+
+        // End Game Function
+        function endGame(collidedEnemyCar) {
+            player.start = false;
+            gameStarted = false;
+            gameover = true;
+            collidedCar = collidedEnemyCar;
+            
+            // Update game statistics
+            gameData.totalGames++;
+            gameData.totalScore += player.score;
+            gameData.lastLevel = currentLevel;
+            
+            // Stop audio
+            backgroundMusic.pause();
+            accelerationSound.pause();
+            brakeSound.pause();
+            
+            // Reset speed indicators
+            acceleratorIcon.style.opacity = '0.5';
+            brakeIcon.style.opacity = '0.5';
+            acceleratorIcon.classList.remove('animate-pulse-fast');
+            brakeIcon.classList.remove('animate-pulse-fast');
+            
+            // Update high score
+            if (player.score > gameData.highScore) {
+                gameData.highScore = player.score;
+            }
+            
+            // Save game data
+            saveGameData();
+            updateGameDataDisplay();
+            
+            // Show collision effect
+            if (collidedEnemyCar) {
+                collidedEnemyCar.classList.add('collision-highlight');
+                document.getElementById('collidedCarImage').style.backgroundImage = 
+                    `url(${collidedEnemyCar.carType})`;
+            }
+            
+            // Update game over screen
+            document.getElementById('finalScore').textContent = player.score;
+            document.getElementById('finalLevel').textContent = currentLevel;
+            document.getElementById('gameOverHighScore').textContent = gameData.highScore;
+            
+            // Show game over screen after a short delay
+            setTimeout(() => {
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+            }, 1000);
+        }
+
+        // Move Cars Function
+        function moveCars(userCar) {
+            let enemyCars = document.querySelectorAll('.other');
+            enemyCars.forEach(function (enemyCar) {
+                if (isCollide(userCar, enemyCar)) {
+                    console.log('COLLISION!');
+                    playCollisionSound();
+                    endGame(enemyCar);
+                    return;
+                }
+                
+                if (enemyCar.y >= 750) {
+                    enemyCar.y = -300;
+                    enemyCar.style.left = Math.floor(Math.random() * 280) + 'px';
+                    // Change car type randomly
+                    enemyCar.carType = carImages[Math.floor(Math.random() * carImages.length)];
+                    enemyCar.style.backgroundImage = `url(${enemyCar.carType})`;
+                }
+                
+                enemyCar.y += player.speed;
+                enemyCar.style.top = enemyCar.y + 'px';
+            });
+        }
+
+        // Main Game Loop
+        function gamePlay() {
+            let userCar = document.querySelector('.UserCar');
+            if (!gamearea || !userCar || !player.start) return;
+            
+            let road = gamearea.getBoundingClientRect();
+
+            if (player.start) {
+                moveLines();
+                moveCars(userCar);
+                
+                // Handle movement
+                if (keys.ArrowUp && player.y > (road.top + 70)) {
+                    player.y -= player.speed;
+                }
+                if (keys.ArrowDown && player.y < (road.bottom - 70)) {
+                    player.y += player.speed;
+                }
+                if (keys.ArrowLeft && player.x > 0) {
+                    player.x -= player.speed;
+                }
+                if (keys.ArrowRight && player.x < (road.width - 50)) {
+                    player.x += player.speed;
+                }
+
+                userCar.style.top = player.y + 'px';
+                userCar.style.left = player.x + 'px';
+
+                // Update score and level
+                player.score++;
+                score.textContent = player.score;
+                updateLevel();
+
+                window.requestAnimationFrame(gamePlay);
+            }
+        }
+
+        // Update Level Function
+        function updateLevel() {
+            if (player.score % 500 === 0 && player.score > 0) {
+                currentLevel++;
+                player.baseSpeed = Math.min(player.baseSpeed + 1, 12);
+                player.speed = player.baseSpeed;
+                player.kmph = convertToKmph(player.speed);
+                level.textContent = currentLevel;
+                speedDisplay.textContent = player.kmph;
+                playScoreSound();
+            }
+        }
+
+        // Audio Functions
+        function playCollisionSound() {
+            collisionSound.currentTime = 0;
+            collisionSound.play();
+        }
+
+        function playScoreSound() {
+            scoreSound.currentTime = 0;
+            scoreSound.play();
+        }
+
+        function playAccelerationSound() {
+            accelerationSound.play();
+        }
+
+        function playBrakeSound() {
+            brakeSound.play();
+        }
+
+        function stopAllAudio() {
+            backgroundMusic.pause();
+            collisionSound.pause();
+            scoreSound.pause();
+            accelerationSound.pause();
+            brakeSound.pause();
+            countdownSound.pause();
+        }
+
+        // Mobile Touch Controls
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            if (!gameStarted) return;
+            
+            let touchEndX = e.changedTouches[0].clientX;
+            let touchEndY = e.changedTouches[0].clientY;
+            
+            let deltaX = touchEndX - touchStartX;
+            let deltaY = touchEndY - touchStartY;
+            
+            // Determine swipe direction
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > 30) {
+                    // Swipe right
+                    simulateKeyPress('ArrowRight');
+                } else if (deltaX < -30) {
+                    // Swipe left
+                    simulateKeyPress('ArrowLeft');
+                }
+            } else {
+                if (deltaY > 30) {
+                    // Swipe down
+                    simulateKeyPress('ArrowDown');
+                } else if (deltaY < -30) {
+                    // Swipe up
+                    simulateKeyPress('ArrowUp');
+                }
+            }
+        });
+
+        function simulateKeyPress(key) {
+            keys[key] = true;
+            keyDown({ key: key, preventDefault: () => {} });
+            setTimeout(() => {
+                keys[key] = false;
+                keyUp({ key: key, preventDefault: () => {} });
+            }, 150);
+        }
+
+        // Mobile Control Buttons
+        function initializeMobileControls() {
+            const upBtn = document.getElementById('upBtn');
+            const downBtn = document.getElementById('downBtn');
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+
+            // Up button (Accelerate)
+            upBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameStarted) return;
+                keys.ArrowUp = true;
+                keyDown({ key: 'ArrowUp', preventDefault: () => {} });
+            });
+            upBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.ArrowUp = false;
+                keyUp({ key: 'ArrowUp', preventDefault: () => {} });
+            });
+
+            // Down button (Brake)
+            downBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameStarted) return;
+                keys.ArrowDown = true;
+                keyDown({ key: 'ArrowDown', preventDefault: () => {} });
+            });
+            downBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.ArrowDown = false;
+                keyUp({ key: 'ArrowDown', preventDefault: () => {} });
+            });
+
+            // Left button
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameStarted) return;
+                keys.ArrowLeft = true;
+            });
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.ArrowLeft = false;
+            });
+
+            // Right button
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameStarted) return;
+                keys.ArrowRight = true;
+            });
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys.ArrowRight = false;
+            });
+
+            // Prevent context menu on long press
+            [upBtn, downBtn, leftBtn, rightBtn].forEach(btn => {
+                btn.addEventListener('contextmenu', (e) => e.preventDefault());
+            });
+        }
+
+        // Responsive Game Area
+        function adjustGameArea() {
+            const gameArea = document.querySelector('.GameArea');
+            if (gameArea) {
+                if (window.innerWidth < 768) {
+                    gameArea.style.width = '288px'; // w-72
+                    gameArea.style.height = '320px'; // h-80
+                } else if (window.innerWidth < 1024) {
+                    gameArea.style.width = '320px'; // w-80
+                    gameArea.style.height = '384px'; // h-96
+                } else {
+                    gameArea.style.width = '384px'; // w-96
+                    gameArea.style.height = '600px'; // h-[600px]
+                }
+            }
+        }
+
+        // Event Listeners
+        window.addEventListener('resize', adjustGameArea);
+        window.addEventListener('orientationchange', adjustGameArea);
+
+        window.addEventListener('beforeunload', function (event) {
+            if (!gameover && gameStarted) {
+                stopAllAudio();
+                // Save current game state
+                saveGameData();
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            adjustGameArea();
+            initializeMobileControls();
+            updateGameDataDisplay();
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(e) {
+                const mobileMenu = document.getElementById('mobileMenu');
+                const nav = document.querySelector('nav');
+                
+                if (!nav.contains(e.target) && mobileMenu.classList.contains('active')) {
+                                        toggleMobileMenu();
+                }
+            });
+        });
+
+        // Prevent zoom on double tap for mobile
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // Prevent scrolling when touching the game area
+        document.addEventListener('touchmove', function(e) {
+            if (e.target.closest('.GameArea') || e.target.closest('#mobileControls')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Additional mobile optimizations
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gesturechange', function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gestureend', function (e) {
+            e.preventDefault();
+        });
+
+        // Keyboard controls info for desktop
+        document.addEventListener('keydown', function(e) {
+            // Prevent default browser shortcuts during game
+            if (gameStarted && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        // Performance optimization for mobile
+        function optimizeForMobile() {
+            if (window.innerWidth < 768) {
+                // Reduce animation complexity on mobile
+                const style = document.createElement('style');
+                style.textContent = `
+                    .lines {
+                        transition: none;
+                    }
+                    .UserCar, .other {
+                        transition: none;
+                    }
+                    .collision-highlight {
+                        animation-duration: 0.3s;
+                        animation-iteration-count: 2;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Call mobile optimization
+        optimizeForMobile();
+
+        // Handle visibility change (when user switches tabs)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && gameStarted) {
+                // Pause game when tab is not visible
+                backgroundMusic.pause();
+                accelerationSound.pause();
+                brakeSound.pause();
+            } else if (!document.hidden && gameStarted && !gameover) {
+                // Resume game when tab becomes visible
+                backgroundMusic.play();
+            }
+        });
+
+        // Add loading state for better UX
+        function showLoadingState() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loadingState';
+            loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50';
+            loadingDiv.innerHTML = `
+                <div class="text-center text-white">
+                    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+                    <p class="text-xl">Loading Game Assets...</p>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+        }
+
+        function hideLoadingState() {
+            const loadingDiv = document.getElementById('loadingState');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        // Preload images for better performance
+        function preloadImages() {
+            const images = [
+                'car1.png', 'car2.png', 'car3.png', 'car4.png', 'car5.png',
+                'backgroundImage.png', 'backgroundImage.gif', 'backgroundImageRule.png'
+            ];
+            
+            let loadedCount = 0;
+            const totalImages = images.length;
+            
+            images.forEach(src => {
+                const img = new Image();
+                img.onload = () => {
+                    loadedCount++;
+                    if (loadedCount === totalImages) {
+                        hideLoadingState();
+                    }
+                };
+                img.onerror = () => {
+                    loadedCount++;
+                    if (loadedCount === totalImages) {
+                        hideLoadingState();
+                    }
+                };
+                img.src = src;
+            });
+        }
+
+        // Initialize loading and preload
+        window.addEventListener('load', function() {
+            showLoadingState();
+            preloadImages();
+        });
+
+        // Add game statistics display
+        function showGameStats() {
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'fixed bottom-4 left-4 bg-black bg-opacity-80 text-white p-3 rounded-lg text-sm z-30';
+            statsDiv.innerHTML = `
+                <div class="mb-1">Games Played: ${gameData.totalGames}</div>
+                <div class="mb-1">Total Score: ${gameData.totalScore}</div>
+                <div>Last Level: ${gameData.lastLevel}</div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (statsDiv.parentNode) {
+                    statsDiv.remove();
+                }
+            }, 5000);
+            
+            document.body.appendChild(statsDiv);
+        }
+
+        // Add keyboard shortcut for stats (press 'S' key)
+        document.addEventListener('keydown', function(e) {
+            if (e.key.toLowerCase() === 's' && !gameStarted) {
+                showGameStats();
+            }
+        });
+
+        // Enhanced error handling
+        window.addEventListener('error', function(e) {
+            console.error('Game Error:', e.error);
+            if (gameStarted) {
+                stopAllAudio();
+                alert('An error occurred. The game will restart.');
+                showHome();
+            }
+        });
+
+        // Add pause functionality (spacebar)
+        let gamePaused = false;
+        document.addEventListener('keydown', function(e) {
+            if (e.key === ' ' && gameStarted && !gameover) {
+                e.preventDefault();
+                togglePause();
+            }
+        });
+
+        function togglePause() {
+            gamePaused = !gamePaused;
+            
+            if (gamePaused) {
+                backgroundMusic.pause();
+                accelerationSound.pause();
+                brakeSound.pause();
+                
+                // Show pause overlay
+                const pauseOverlay = document.createElement('div');
+                pauseOverlay.id = 'pauseOverlay';
+                pauseOverlay.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-40';
+                pauseOverlay.innerHTML = `
+                    <div class="text-center text-white">
+                        <h2 class="text-4xl font-bold mb-4">PAUSED</h2>
+                        <p class="text-xl mb-4">Press SPACEBAR to resume</p>
+                        <p class="text-sm">Current Score: ${player.score}</p>
+                    </div>
+                `;
+                document.body.appendChild(pauseOverlay);
+            } else {
+                backgroundMusic.play();
+                const pauseOverlay = document.getElementById('pauseOverlay');
+                if (pauseOverlay) {
+                    pauseOverlay.remove();
+                }
+            }
+        }
+
+        // Modify gamePlay function to handle pause
+        const originalGamePlay = gamePlay;
+        gamePlay = function() {
+            if (!gamePaused) {
+                originalGamePlay();
+            } else {
+                // Continue checking for pause state
+                if (player.start) {
+                    window.requestAnimationFrame(gamePlay);
+                }
+            }
+        };
+
+        // Add sound toggle functionality
+        let soundEnabled = localStorage.getItem('roadRaceSoundEnabled') !== 'false';
+        
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('roadRaceSoundEnabled', soundEnabled.toString());
+            
+            if (!soundEnabled) {
+                stopAllAudio();
+            }
+            
+            updateSoundButton();
+        }
+
+        function updateSoundButton() {
+            const soundBtn = document.getElementById('soundToggle');
+            if (soundBtn) {
+                soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+                soundBtn.title = soundEnabled ? 'Mute Sound' : 'Enable Sound';
+            }
+        }
+
+        // Add sound toggle button to navigation
+        function addSoundToggle() {
+            const nav = document.querySelector('nav .container');
+            const soundBtn = document.createElement('button');
+            soundBtn.id = 'soundToggle';
+            soundBtn.className = 'fixed top-4 right-20 md:right-24 bg-white text-game-teal px-3 py-2 rounded hover:bg-gray-100 transition-colors z-50';
+            soundBtn.onclick = toggleSound;
+            updateSoundButton();
+            document.body.appendChild(soundBtn);
+        }
+
+        // Override audio functions to respect sound setting
+        const originalPlayCollisionSound = playCollisionSound;
+        const originalPlayScoreSound = playScoreSound;
+        const originalPlayAccelerationSound = playAccelerationSound;
+        const originalPlayBrakeSound = playBrakeSound;
+
+        playCollisionSound = function() {
+            if (soundEnabled) originalPlayCollisionSound();
+        };
+
+        playScoreSound = function() {
+            if (soundEnabled) originalPlayScoreSound();
+        };
+
+        playAccelerationSound = function() {
+            if (soundEnabled) originalPlayAccelerationSound();
+        };
+
+        playBrakeSound = function() {
+            if (soundEnabled) originalPlayBrakeSound();
+        };
+
+        // Initialize sound toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            addSoundToggle();
+        });
+
+        // Add fullscreen support for mobile
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('Fullscreen not supported:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Add fullscreen button for mobile
+        function addFullscreenButton() {
+            if (window.innerWidth < 768) {
+                const fullscreenBtn = document.createElement('button');
+                fullscreenBtn.className = 'fixed top-4 left-4 bg-white text-game-teal px-3 py-2 rounded hover:bg-gray-100 transition-colors z-50 md:hidden';
+                fullscreenBtn.innerHTML = '⛶';
+                fullscreenBtn.title = 'Toggle Fullscreen';
+                fullscreenBtn.onclick = toggleFullscreen;
+                document.body.appendChild(fullscreenBtn);
+            }
+        }
+
+        // Initialize fullscreen button
+        document.addEventListener('DOMContentLoaded', function() {
+            addFullscreenButton();
+        });
+
+        // Final initialization
+        console.log('🎮 Aanchal Road Race - Game Loaded Successfully!');
+        console.log('📊 Game Statistics:', gameData);
+        console.log('🎯 Press "S" key to view detailed stats');
+        console.log('⏸️ Press SPACEBAR during game to pause');
+        console.log('🔊 Click sound button to toggle audio');
+    </script>
+</body>
+
+</html>
+
